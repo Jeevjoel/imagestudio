@@ -18,5 +18,5 @@ It allows users to apply adjustments such as brightness, contrast, saturation, a
 ## 📸 Installation & Setup  
 1. Clone the repository:  
    ```sh
-   git clone https://github.com/your-username/your-repo.git
-   cd your-repo
+   git clone https://github.com/Jeevjoel/imagestudio.git
+   cd imagestudio
