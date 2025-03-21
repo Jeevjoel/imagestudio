@@ -1,0 +1,79 @@
+{% extends 'app/layout.html' %}
+
+{% block title %}File Upload{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #0d0d0d; /* Deep black */
+            color: #e0e0e0;
+        }
+        .upload-container {
+            background: #1e1e1e;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s;
+        }
+        .upload-container:hover {
+            box-shadow: 0 6px 15px rgba(255, 255, 255, 0.15);
+        }
+        .upload-container input[type="file"] {
+            display: none;
+        }
+        .upload-container label {
+            display: inline-block;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: #ffffff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: transform 0.2s ease-in-out;
+        }
+        .upload-container label:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, #0056b3, #004494);
+        }
+        .upload-container .file-name {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #bbbbbb;
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('file-upload').addEventListener('change', function() {
+                let file = this.files[0];
+                if (file) {
+                    let reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = function () {
+                        localStorage.setItem("uploadedImage", reader.result);
+                        window.location.href = "{% url 'edit_view' %}";
+                    };
+                }
+                document.getElementById('file-name').textContent = file ? file.name : 'No file chosen';
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div class="upload-container">
+        <h2>Upload Your File</h2>
+        <input type="file" id="file-upload" />
+        <label for="file-upload">Choose File</label>
+        <div class="file-name" id="file-name">No file chosen</div>
+    </div>
+{% endblock %}

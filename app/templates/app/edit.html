@@ -1,0 +1,635 @@
+{% extends 'app/layout.html' %}
+
+{% block title %}Edit File{% endblock %}
+{% block stylesheets %}
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #121212;
+        margin: 0;
+        color: white;
+    }
+    .edit-container {
+        display: flex;
+        position: relative;
+        width: 90%;
+        height: 90%;
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+    #editDiv{
+        display: none;
+    }
+    .canvas-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+    }
+    #dimensions {
+        font-size: 20px;
+        position: relative;
+        top: 100px;
+        left: 500px;
+        padding: 12px 16px;
+        color: #1e1e2e;
+        border-radius: 8px;
+        box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.2); /* Subtle depth */
+        transition: all 0.3s ease-in-out; /* Smooth animations */
+    }
+    #dimensions:hover {
+        transform: translateX(-2px); /* Move it slightly left on hover */
+        box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    #imageCanvas {
+        max-width: 100%;
+        border-radius: 10px;
+    }
+    #gridCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        max-width: 100%;
+        pointer-events: none;
+    }
+    h2 {
+        margin-bottom: 20px;
+        color: #333;
+    }
+    .sidebar {
+        height: 90%;
+        width: 20%;
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        left: 0;
+        background-color: #1c1c1c;
+        overflow-x: hidden;
+        transition: width 0.5s ease;
+        padding: 60px 10px 10px 10px;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+    }
+    .hidden {
+        width: 1px;
+        opacity: 0;
+        pointer-events: none; /* Prevent interaction */
+        overflow: hidden;
+        padding: 60px 0 10px 0; /* Adjust padding to avoid layout issues */
+    }
+    .sidebarHead{
+        padding: 10px;
+        text-decoration: none;
+        font-size: 25px;
+        text-align: left;
+        color: #b8b8b8;
+        display: block;
+        transition: color 0.3s ease;
+    }
+    .sidebar a:hover, .sidebar label:hover {
+        color: #f1f1f1;
+    }
+    .sidebar .closebtn {
+        position: absolute;
+        top: 0;
+        right: 25px;
+        font-size: 36px;
+        margin-left: 50px;
+        color: #b8b8b8;
+        cursor: pointer;
+    }
+    .sidebar .closebtn:hover {
+        color: #f1f1f1;
+    }
+    .openbtn {
+        cursor: pointer;
+        background-color: #1c1c1c;
+        color: white;
+        padding: 10px 13px;
+        border: none;
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        transition: background-color 0.3s ease;
+        border-radius: 5px;
+    }
+    .openbtn:hover {
+        background-color: #444;
+        background: #242431;
+        border-color: #333542;
+        transform: scale(1.01);
+    }
+    .openbtn:active {
+        transform: scale(0.98);
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
+    }
+    .sidebar input[type="range"] {
+        width: 80%;
+        margin: 10px 0;
+    }
+    .slider {
+        text-decoration: none;
+        background-color: #2a2a2a;
+        border-radius: 8px;
+        margin-bottom: 5px;
+        padding: 5px;
+    }
+    .slider label{
+        text-decoration: none;
+        font-size: 16px;
+        color: #b8b8b8;
+    }
+    .filter {
+        padding: 10px;
+        text-align: center;
+        font-size: 16px;
+        background-color: #2a2a2a;
+        border-radius: 8px;
+        margin-bottom: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        text-decoration: none;
+        color: #b8b8b8;
+        display: block;
+        transition: color 0.3s ease;
+    }
+    .filter:hover {
+        background-color: #444;
+    }
+    .button-container {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        margin-top: 20px;
+    }
+    .dark-button {
+        background: #1c1c1c;
+        color: #f8fafc;
+        font-size: 16px;
+        font-weight: bold;
+        margin: 2px;
+        padding: 12px 24px;
+        border: 2px solid #313244;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    .dark-button:hover {
+        background: #242431;
+        border-color: #333542;
+        transform: scale(1.02);
+    }
+    .dark-button:active {
+        transform: scale(0.98);
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
+    }
+      /* General Slider Styles */
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 10px;
+        background: linear-gradient(90deg, #6a11cb, #2575fc);
+        border-radius: 20px;
+        outline: none;
+        cursor: pointer;
+        box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.1), 
+                    inset -2px -2px 5px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease-in-out;
+    }
+    
+    /* Webkit Track */
+    input[type="range"]::-webkit-slider-runnable-track {
+        background: transparent;
+        height: 10px;
+        border-radius: 20px;
+    }
+    
+    /* Thumb (Webkit) */
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: radial-gradient(circle, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+        border: 2px solid rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        margin-top: -5px;
+    }
+    
+    /* Thumb Hover & Active */
+    input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    input[type="range"]:active::-webkit-slider-thumb {
+        transform: scale(1.3);
+        background: white;
+        border: 2px solid #fff;
+        box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.4);
+    }
+    
+    /* Firefox Track */
+    input[type="range"]::-moz-range-track {
+        background: linear-gradient(90deg, #6a11cb, #2575fc);
+        height: 10px;
+        border-radius: 20px;
+    }
+    
+    /* Firefox Thumb */
+    input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: radial-gradient(circle, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+        border: 2px solid rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    /* Thumb Hover (Firefox) */
+    input[type="range"]::-moz-range-thumb:hover {
+        transform: scale(1.2);
+        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+
+    /* Loader Animation */
+    .loader {
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-top: 5px solid #fff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    #loading-text {
+        margin-top: 10px;
+        font-size: 18px;
+        opacity: 0.8;
+    }
+</style>
+{% endblock %}
+{% block javascripts %}
+<script>
+    let canvas, gridCanvas, ctx, img, originalImageData,undoImageData;
+    let contrastValue=0,brightnessValue=0,saturationValue=0;
+    let scale = 1;
+    let scaleFactor = 1.1;
+    let history = [];
+    let historyIndex = -1;
+
+    //loading screen
+    window.addEventListener("load", function() {
+        setTimeout(() => {
+            document.getElementById("loading-screen").style.display = "none";
+            document.getElementById("editDiv").style.display = "flex";
+        }, 1500); // 1.5 second delay
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        canvas = document.getElementById('imageCanvas');
+        gridCanvas=document.getElementById('gridCanvas');
+        gridCanvas.style.display = 'none'; // Hide grid
+
+        ctx = canvas.getContext('2d', { willReadFrequently: true });
+        imageGridDiv=document.getElementById('imageGridDiv');
+
+        //sliders
+        let brightnessSlider = document.getElementById('brightnessSlider');
+        brightnessSlider.addEventListener('input', applyFilters);
+        let contrastSlider = document.getElementById('contrastSlider');
+        contrastSlider.addEventListener('input', applyFilters);
+        let saturationSlider = document.getElementById('saturationSlider');
+        saturationSlider.addEventListener('input', applyFilters);
+
+        img = new Image();
+        img.src = localStorage.getItem('uploadedImage');
+        img.onload = function() {
+            canvas.width=gridCanvas.width = img.width;
+            canvas.height=gridCanvas.height= img.height;
+
+            document.getElementById('dimensions').textContent = `${img.width} x ${img.height} px`;
+
+            ctx.drawImage(img, 0, 0);
+            setTimeout(() => {
+                originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                drawGrid();
+            },50);
+        };
+    });
+
+    document.addEventListener("wheel", function(event) {
+        event.preventDefault();
+        let maxScale=3;
+        let minScale = 0.1;
+
+        if (event.deltaY < 0 && scale < maxScale) {
+            scale *= scaleFactor; // Zoom in
+        } else if (event.deltaY > 0 && scale > minScale) {
+            scale /= scaleFactor; // Zoom out
+        }
+        else {
+            return;
+        }
+
+        // Apply CSS transform to the canvas
+        imageGridDiv.style.transform = `scale(${scale})`;
+        drawGrid();
+
+    }, { passive: false });
+
+
+    function drawGrid(gridSize = 50) {
+        let gridCtx = gridCanvas.getContext('2d');
+        
+        gridCanvas.width = canvas.width;
+        gridCanvas.height = canvas.height;
+
+        gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+        gridCtx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+        gridCtx.lineWidth = 1;
+
+        for (let x = 0; x <= gridCanvas.width; x += gridSize) {
+            gridCtx.beginPath();
+            gridCtx.moveTo(x, 0);
+            gridCtx.lineTo(x, gridCanvas.height);
+            gridCtx.stroke();
+        }
+
+        for (let y = 0; y <= gridCanvas.height; y += gridSize) {
+            gridCtx.beginPath();
+            gridCtx.moveTo(0, y);
+            gridCtx.lineTo(gridCanvas.width, y);
+            gridCtx.stroke();
+        }
+    }
+
+    function toggleNav() {
+        let sidebar = document.getElementById("inputSidebar");
+
+        if (sidebar.classList.contains("hidden")) {
+            // Show sidebar
+            sidebar.classList.remove("hidden");
+            setTimeout(() => sidebar.style.width = "250px", 10);
+        } else {
+            // Hide sidebar with animation
+            sidebar.style.width = "1px";
+            setTimeout(() => sidebar.classList.add("hidden"), 500); // Wait for animation to finish
+        }
+    }
+
+
+    function applyFilters() {
+        if (!originalImageData) return;
+        saveToHistory();
+
+        brightnessValue=parseInt(brightnessSlider.value,10);
+        contrastValue=parseInt(contrastSlider.value,10);
+        saturationValue=parseInt(saturationSlider.value,10);
+
+        let contrastFactor = (259 * (contrastValue + 255)) / (255 * (259 - contrastValue));
+        let saturationFactor = 1 + saturationValue / 100;
+
+
+        // Create a copy of the original image data
+        let imageData = new ImageData(
+            new Uint8ClampedArray(originalImageData.data),
+            originalImageData.width,
+            originalImageData.height
+        );
+
+        let pixels = imageData.data;
+
+        for (let i = 0; i < pixels.length; i += 4) {
+            let r = pixels[i];
+            let g = pixels[i + 1];
+            let b = pixels[i + 2];
+
+            // Apply brightness
+            r = Math.min(255, Math.max(0, r + brightnessValue));
+            g = Math.min(255, Math.max(0, g + brightnessValue));
+            b = Math.min(255, Math.max(0, b + brightnessValue));
+
+            // Apply contrast
+            r = Math.min(255, Math.max(0, contrastFactor * (r - 128) + 128));
+            g = Math.min(255, Math.max(0, contrastFactor * (g - 128) + 128));
+            b = Math.min(255, Math.max(0, contrastFactor * (b - 128) + 128));
+
+            //Apply saturation
+            gray=r*0.3+g*0.59+b*0.11;
+            
+            r=gray+(r-gray)*saturationFactor;
+            g=gray+(g-gray)*saturationFactor;
+            b=gray+(b-gray)*saturationFactor;
+
+            //Apply all adjustments
+            pixels[i] = r;
+            pixels[i + 1] = g;
+            pixels[i + 2] = b;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.putImageData(imageData, 0, 0);
+        drawGrid();
+    }
+
+    function grayscaleFilter() {
+        saveToHistory();
+        let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let pixels = imageData.data; // Array of RGBA values
+
+        // Loop through each pixel
+        for (let i = 0; i < pixels.length; i += 4) {
+            let r = pixels[i];     // Red
+            let g = pixels[i + 1]; // Green
+            let b = pixels[i + 2]; // Blue
+
+            // Apply grayscale formula
+            let gray = Math.round(0.3 * r + 0.59 * g + 0.11 * b);
+
+            // Assign the new grayscale value to R, G, and B channels
+            pixels[i] = pixels[i + 1] = pixels[i + 2] = gray;
+        }
+
+        // Apply the modified pixel data back to the canvas
+        ctx.putImageData(imageData, 0, 0);
+        drawGrid();
+    }
+
+    function sepiaFilter(){
+        saveToHistory();
+        let imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
+        let pixels=imageData.data;
+
+        for(i=0;i<pixels.length;i+=4){
+            let r=pixels[i];
+            let g=pixels[i+1];
+            let b=pixels[i+2];
+
+            pixels[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+            pixels[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+            pixels[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+        }
+        ctx.putImageData(imageData,0,0);
+        drawGrid();
+    }
+
+    function downloadImage(){
+        setTimeout(() => { 
+            let link = document.createElement('a');
+            link.download = 'edited-image.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }, 100);
+    }
+
+    function restoreOriginal(){
+        saveToHistory();
+        ctx.putImageData(originalImageData, 0, 0);
+        drawGrid();
+        brightnessSlider.value=0;
+        contrastSlider.value=0;
+        saturationSlider.value=0;
+    }
+
+    function showGrid(){
+        if (gridCanvas.style.display === 'none') {
+            gridCanvas.style.display = 'block';
+        } else {
+            gridCanvas.style.display = 'none';
+        }
+    }
+
+    let saveTimeout = null;
+
+    function saveToHistory() {
+        // If a timer already exists, clear it to prevent multiple updates
+        clearTimeout(saveTimeout);
+
+        saveTimeout = setTimeout(() => {
+            if (historyIndex < history.length - 1) {
+                history = history.slice(0, historyIndex + 1); // Remove forward history
+            }
+
+            history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+            historyIndex++;
+        }, 100);
+    }
+
+
+    function undo(){
+        if(historyIndex>0){
+            historyIndex--;
+            ctx.putImageData(history[historyIndex],0,0);
+        }
+    }
+
+    function redo(){
+        if(historyIndex<history.length-1){
+            historyIndex++;
+            ctx.putImageData(history[historyIndex],0,0);
+        }
+    }
+
+    //updating slider value display
+    function updateSliderValue(val) {
+        document.getElementById(val + 'Span').textContent = document.getElementById(val).value;
+    }
+</script>
+{% endblock %}
+{% block content %}
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <p class="loading-text">Loading...</p>
+    </div>
+    <div id="editDiv" class="edit-container">
+        <div id="imageDimensions">
+            <h2 id="dimensions"></h2>
+        </div>
+        <div id="inputSidebar" class="sidebar hidden">
+            <span class="closebtn" onclick="toggleNav()">×</span>
+            <div id="sliders">
+                <label class="sidebarHead">Picture settings</label>
+                <div class="slider">
+                    <label>Brightness: 
+                        <input type="range" id="brightnessSlider" min="-100" max="100" value="0" oninput="updateSliderValue(this.id)">
+                    </label>
+                    <span id="brightnessSliderSpan">0</span>
+                </div>
+                <div class="slider">
+                    <label>Contrast:
+                        <input type="range" id="contrastSlider" min="-100" max="100" value="0" oninput="updateSliderValue(this.id)">
+                    </label>
+                    <span id="contrastSliderSpan">0</span>
+                </div>
+                <div class="slider">
+                    <label>Saturation: 
+                        <input type="range" id="saturationSlider" min="-100" max="100" value="0" oninput="updateSliderValue(this.id)">
+                    </label>
+                    <span id="saturationSliderSpan">0</span>
+                </div>
+            </div>
+            <div id="filters">
+                <label class="sidebarHead">Filters</label>
+                <label onclick="grayscaleFilter()">
+                    <a href="#" class="filter">Grayscale</a>
+                </label>
+                <label onclick="sepiaFilter()">
+                    <a href="#" class="filter">Sepia</a>
+                </label>
+            </div>
+        </div>
+        <button class="openbtn" onclick="toggleNav()">
+            <img width="25" height="30" src="https://img.icons8.com/ios-filled/50/759ed7/menu--v6.png" alt="menu--v6"/>
+        </button>
+        <div class="canvas-container" id="imageGridDiv">
+            <canvas id="imageCanvas"></canvas>
+            <canvas id="gridCanvas"></canvas>
+        </div>
+        <div class="button-container">
+            <button id="Undo" class="dark-button" onclick="undo()">
+                <img width="20" height="20" src="https://img.icons8.com/officel/80/undo.png" alt="undo"/>
+            </button>
+            <button id="Redo" class="dark-button" onclick="redo()">
+                <img width="20" height="20" src="https://img.icons8.com/officel/80/redo.png" alt="redo"/>
+            <button class="dark-button" onclick="downloadImage()">
+                <img width="20" height="20" src="https://img.icons8.com/office/40/download--v1.png" alt="download--v1"/>
+            </button>
+            <button class="dark-button" onclick="restoreOriginal()">
+                <img width="20" height="20" src="https://img.icons8.com/office/40/restart.png" alt="restart"/>
+            </button>
+            <button id="closeGridButton" class="dark-button" onclick="showGrid()">
+                <img width="20" height="20" src="https://img.icons8.com/color/48/activity-grid-2.png" alt="activity-grid-2"/>
+            </button>
+            </button>
+        </div>
+    </div>
+{% endblock %}
