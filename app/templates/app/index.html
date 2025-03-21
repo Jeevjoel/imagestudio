@@ -52,12 +52,17 @@
 
 {% block javascripts %}
     <script>
+        //Wait for page load
         document.addEventListener("DOMContentLoaded", () => {
+            //Listen for file upload
             document.getElementById('file-upload').addEventListener('change', function() {
+                //Gets the file selected
                 let file = this.files[0];
                 if (file) {
                     let reader = new FileReader();
+                    //Converts the file to base64 string
                     reader.readAsDataURL(file);
+                    //When fully read, save the base64 string to local storage and redirect to edit view
                     reader.onload = function () {
                         localStorage.setItem("uploadedImage", reader.result);
                         window.location.href = "{% url 'edit_view' %}";
@@ -72,7 +77,7 @@
 {% block content %}
     <div class="upload-container">
         <h2>Upload Your File</h2>
-        <input type="file" id="file-upload" />
+        <input type="file" id="file-upload"/>
         <label for="file-upload">Choose File</label>
         <div class="file-name" id="file-name">No file chosen</div>
     </div>

@@ -43,18 +43,19 @@
     }
     #dimensions {
         font-size: 20px;
-        position: relative;
-        top: 100px;
-        left: 500px;
-        padding: 12px 16px;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 12px;
+        font-weight: 450;
         color: #1e1e2e;
         border-radius: 8px;
-        box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.2); /* Subtle depth */
-        transition: all 0.3s ease-in-out; /* Smooth animations */
+        box-shadow: 1px 2px 2px 1px #696969;
+        transition: all 0.3s ease-in-out;
     }
     #dimensions:hover {
-        transform: translateX(-2px); /* Move it slightly left on hover */
-        box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.3);
+        transform: translateX(-1px); /* Move it slightly left on hover */
+        box-shadow: 2px 3px 3px 2px #8b8b8b;
     }
 
     #imageCanvas {
@@ -314,6 +315,7 @@
         }, 1500); // 1.5 second delay
     });
 
+    //DOM and img loading
     document.addEventListener("DOMContentLoaded", () => {
         canvas = document.getElementById('imageCanvas');
         gridCanvas=document.getElementById('gridCanvas');
@@ -336,6 +338,7 @@
             canvas.width=gridCanvas.width = img.width;
             canvas.height=gridCanvas.height= img.height;
 
+            // Display image dimensions
             document.getElementById('dimensions').textContent = `${img.width} x ${img.height} px`;
 
             ctx.drawImage(img, 0, 0);
@@ -346,6 +349,7 @@
         };
     });
 
+    // Zoom in/out using mouse wheel
     document.addEventListener("wheel", function(event) {
         event.preventDefault();
         let maxScale=3;
@@ -367,6 +371,7 @@
     }, { passive: false });
 
 
+    // Draw grid on another canvas element
     function drawGrid(gridSize = 50) {
         let gridCtx = gridCanvas.getContext('2d');
         
@@ -392,6 +397,7 @@
         }
     }
 
+    // Sidebar toggle with animation
     function toggleNav() {
         let sidebar = document.getElementById("inputSidebar");
 
@@ -407,6 +413,7 @@
     }
 
 
+    //Apply all image adjustments on the image canvas
     function applyFilters() {
         if (!originalImageData) return;
         saveToHistory();
@@ -450,27 +457,28 @@
             g=gray+(g-gray)*saturationFactor;
             b=gray+(b-gray)*saturationFactor;
 
-            //Apply all adjustments
+            //Apply all adjustments onto the image
             pixels[i] = r;
             pixels[i + 1] = g;
             pixels[i + 2] = b;
         }
 
+        // Apply the modified pixel data back to the canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.putImageData(imageData, 0, 0);
         drawGrid();
     }
 
+    //Apply grayscale filter
     function grayscaleFilter() {
         saveToHistory();
         let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        let pixels = imageData.data; // Array of RGBA values
+        let pixels = imageData.data;
 
-        // Loop through each pixel
         for (let i = 0; i < pixels.length; i += 4) {
-            let r = pixels[i];     // Red
-            let g = pixels[i + 1]; // Green
-            let b = pixels[i + 2]; // Blue
+            let r = pixels[i];
+            let g = pixels[i + 1];
+            let b = pixels[i + 2];
 
             // Apply grayscale formula
             let gray = Math.round(0.3 * r + 0.59 * g + 0.11 * b);
@@ -484,6 +492,7 @@
         drawGrid();
     }
 
+    //Apply sepia filter
     function sepiaFilter(){
         saveToHistory();
         let imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
@@ -502,6 +511,7 @@
         drawGrid();
     }
 
+    // Download the edited image
     function downloadImage(){
         setTimeout(() => { 
             let link = document.createElement('a');
@@ -511,6 +521,7 @@
         }, 100);
     }
 
+    //Restore the original image by using the original image data
     function restoreOriginal(){
         saveToHistory();
         ctx.putImageData(originalImageData, 0, 0);
@@ -520,6 +531,7 @@
         saturationSlider.value=0;
     }
 
+    //Show/hide grid
     function showGrid(){
         if (gridCanvas.style.display === 'none') {
             gridCanvas.style.display = 'block';
@@ -530,21 +542,25 @@
 
     let saveTimeout = null;
 
+    // Save the current image state to the history array
     function saveToHistory() {
         // If a timer already exists, clear it to prevent multiple updates
         clearTimeout(saveTimeout);
 
         saveTimeout = setTimeout(() => {
+            //If the user undoes and makes a new edit, deletes "redo" history (everything ahead of historyIndex)
             if (historyIndex < history.length - 1) {
-                history = history.slice(0, historyIndex + 1); // Remove forward history
+                history = history.slice(0, historyIndex + 1);
             }
 
+            // Save the current image state to the history array
             history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
             historyIndex++;
         }, 100);
     }
 
 
+    //Undo function
     function undo(){
         if(historyIndex>0){
             historyIndex--;
@@ -552,6 +568,7 @@
         }
     }
 
+    //Redo function
     function redo(){
         if(historyIndex<history.length-1){
             historyIndex++;
@@ -559,7 +576,7 @@
         }
     }
 
-    //updating slider value display
+    //Updating slider value display
     function updateSliderValue(val) {
         document.getElementById(val + 'Span').textContent = document.getElementById(val).value;
     }
@@ -571,13 +588,12 @@
         <p class="loading-text">Loading...</p>
     </div>
     <div id="editDiv" class="edit-container">
-        <div id="imageDimensions">
-            <h2 id="dimensions"></h2>
+        <div id="dimensions">
         </div>
         <div id="inputSidebar" class="sidebar hidden">
             <span class="closebtn" onclick="toggleNav()">×</span>
             <div id="sliders">
-                <label class="sidebarHead">Picture settings</label>
+                <label class="sidebarHead">Adjustments</label>
                 <div class="slider">
                     <label>Brightness: 
                         <input type="range" id="brightnessSlider" min="-100" max="100" value="0" oninput="updateSliderValue(this.id)">
