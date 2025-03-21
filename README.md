@@ -5,13 +5,13 @@ It allows users to apply adjustments such as brightness, contrast, saturation, a
 
 ## 🚀 Features  
 - Upload and edit images in real time  
-- Adjust brightness, contrast, and saturation  
+- Adjust brightness, contrast, and saturation
+- Apply filters like grayscale, sepia  
 - Modern UI with a dark theme  
-- Uses HTML5 Canvas for image processing  
-- Sidebar for easy navigation  
+- Uses HTML5 Canvas for image processing
 
 ## 🛠️ Technologies Used  
-- **Frontend**: HTML, CSS, JavaScript (Vanilla JS, ECharts)  
+- **Frontend**: HTML, CSS, JavaScript (Vanilla JS)  
 - **Backend**: Django (Python)  
 - **Canvas API**: For real-time image manipulation  
 
